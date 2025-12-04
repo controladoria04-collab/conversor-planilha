@@ -19,10 +19,10 @@ st.info("📤 Envie o relatório do MyEduzz para iniciar a conversão.")
 # Upload do CSV
 uploaded_csv = st.file_uploader("Enviar relatório do MyEduzz", type=["csv"])
 
-# Upload do arquivo modelo (Excel .xls ou .xlsx)
-uploaded_modelo = st.file_uploader("Enviar planilha modelo (XLS ou XLSX)", type=["xls", "xlsx"])
+# Caminho do arquivo modelo (já existente no app)
+MODEL_FILE = "modelo.xlsx"  # Coloque o modelo no mesmo diretório do app
 
-if uploaded_csv and uploaded_modelo:
+if uploaded_csv:
     with st.spinner("🔄 Convertendo arquivo, aguarde..."):
         # Ler CSV
         try:
@@ -30,13 +30,12 @@ if uploaded_csv and uploaded_modelo:
         except:
             df_origem = pd.read_csv(uploaded_csv, sep=";", encoding="latin1")
 
-        # Ler Excel modelo (xls ou xlsx)
+        # Ler modelo Excel já presente
         try:
-            # Detecta extensão para escolher engine
-            if uploaded_modelo.name.endswith(".xls"):
-                df_modelo = pd.read_excel(uploaded_modelo, engine="xlrd")
-            else:  # xlsx
-                df_modelo = pd.read_excel(uploaded_modelo, engine="openpyxl")
+            if MODEL_FILE.endswith(".xls"):
+                df_modelo = pd.read_excel(MODEL_FILE, engine="xlrd")
+            else:
+                df_modelo = pd.read_excel(MODEL_FILE, engine="openpyxl")
         except Exception as e:
             st.error(f"Erro ao ler a planilha modelo: {e}")
             st.stop()
