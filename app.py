@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import io
+import os
 
 # --- Título estilizado ---
 st.markdown("""
@@ -18,23 +19,29 @@ st.info("📤 Envie o relatório do MyEduzz para iniciar a conversão.")
 # Upload do CSV
 uploaded_csv = st.file_uploader("Enviar relatório do MyEduzz", type=["csv"])
 
-# Caminho do arquivo modelo
-MODEL_FILE = "modelo.xls"
+# Upload do arquivo modelo (Excel .xls ou .xlsx)
+uploaded_modelo = st.file_uploader("Enviar planilha modelo (XLS ou XLSX)", type=["xls", "xlsx"])
 
-if uploaded_csv:
+if uploaded_csv and uploaded_modelo:
     with st.spinner("🔄 Convertendo arquivo, aguarde..."):
-
         # Ler CSV
         try:
             df_origem = pd.read_csv(uploaded_csv, sep=";", encoding="utf-8")
         except:
             df_origem = pd.read_csv(uploaded_csv, sep=";", encoding="latin1")
 
-        # Ler modelo .xls
-        df_modelo = pd.read_excel(MODEL_FILE, engine="openpyxl")
+        # Ler Excel modelo (xls ou xlsx)
+        try:
+            # Detecta extensão para escolher engine
+            if uploaded_modelo.name.endswith(".xls"):
+                df_modelo = pd.read_excel(uploaded_modelo, engine="xlrd")
+            else:  # xlsx
+                df_modelo = pd.read_excel(uploaded_modelo, engine="openpyxl")
+        except Exception as e:
+            st.error(f"Erro ao ler a planilha modelo: {e}")
+            st.stop()
 
-
-        # Ajustar linhas
+        # Ajustar linhas do modelo conforme CSV
         df_final = df_modelo.iloc[:len(df_origem)].copy()
 
         # --- Mapeamentos ---
@@ -61,7 +68,6 @@ if uploaded_csv:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-
 # --- RODAPÉ COM O VERSÍCULO ---
 st.markdown("""
     <br><br>
@@ -69,4 +75,3 @@ st.markdown("""
         “Entrega o teu caminho ao Senhor; confia nele, e o mais Ele fará.” — Salmo 37:5
     </p>
 """, unsafe_allow_html=True)
-
