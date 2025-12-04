@@ -19,7 +19,8 @@ if uploaded_csv:
         df_origem = pd.read_csv(uploaded_csv, sep=";", encoding="latin1")
 
     # Ler a planilha modelo
-    df_modelo = pd.read_excel(MODEL_FILE)
+    df_modelo = pd.read_excel(MODEL_FILE, engine="openpyxl")
+
     
     # Ajustar tamanho
     df_final = df_modelo.copy()
@@ -47,3 +48,4 @@ if uploaded_csv:
         file_name="Planilha_Convertida.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
