@@ -1,92 +1,56 @@
-import streamlit as st
+# @title Conversor CSV -> Modelo | Automação 1.0
+
 import pandas as pd
 import io
+from google.colab import files
 
-st.set_page_config(page_title="Conversor CSV → Modelo", layout="centered")
+print(">>> UPLOAD 1: Envie o CSV com os dados ORIGINAIS <<<")
+uploaded_csv = files.upload()
+if not uploaded_csv:
+    raise ValueError("Nenhum arquivo CSV enviado.")
+csv_name = next(iter(uploaded_csv))
 
-st.title("Conversor CSV → Modelo | Automação 1.0")
-st.write("Envie o arquivo **CSV original** e a **Planilha Modelo (XLSX)** para gerar a planilha final convertida.")
+# Tentativa de leitura do CSV
+try:
+    df_origem = pd.read_csv(io.BytesIO(uploaded_csv[csv_name]), encoding='utf-8', sep=';')
+except:
+    df_origem = pd.read_csv(io.BytesIO(uploaded_csv[csv_name]), encoding='latin1', sep=';')
 
+print("\n>>> UPLOAD 2: Envie a PLANILHA MODELO (XLSX) <<<")
+uploaded_model = files.upload()
+if not uploaded_model:
+    raise ValueError("Nenhuma planilha modelo enviada.")
+model_name = next(iter(uploaded_model))
 
-# ==============================================================
-# UPLOAD DO CSV ORIGINAL
-# ==============================================================
-st.subheader("1️⃣ Envie o arquivo CSV original")
-csv_file = st.file_uploader("Selecione o CSV", type=["csv"])
+# Ler planilha modelo
+df_modelo = pd.read_excel(io.BytesIO(uploaded_model[model_name]))
 
-df_origem = None
+# Copiar e ajustar tamanho conforme o CSV
+df_final = df_modelo.copy()
+df_final = df_final.iloc[:len(df_origem)].copy()
 
-if csv_file:
-    # Tentativa de leitura em UTF-8 / Latin-1
-    try:
-        df_origem = pd.read_csv(csv_file, encoding="utf-8", sep=";")
-    except:
-        df_origem = pd.read_csv(csv_file, encoding="latin1", sep=";")
+# Mapeamentos solicitados
+print("\nMapeando dados...")
 
-    st.success("CSV carregado com sucesso!")
-    st.dataframe(df_origem.head())
+# Datas — copiar Data de Criação para as 3 colunas
+df_final["Data de Competência"] = df_origem["Data de Criação"]
+df_final["Data de Vencimento"] = df_origem["Data de Criação"]
+df_final["Data de Pagamento"] = df_origem["Data de Criação"]
 
+# Descrição ← Produto
+df_final["Descrição"] = df_origem["Produto"]
 
-# ==============================================================
-# UPLOAD DA PLANILHA MODELO
-# ==============================================================
-st.subheader("2️⃣ Envie a Planilha Modelo (XLSX)")
-modelo_file = st.file_uploader("Selecione a planilha modelo", type=["xls", "xlsx"])
+# Valor ← Ganho Liquido
+df_final["Valor"] = df_origem["Ganho Liquido"]
 
-df_modelo = None
+# Categoria fixa
+df_final["Categoria"] = "11307 - Receita de Cursos"
 
-if modelo_file:
-    df_modelo = pd.read_excel(modelo_file)
-    st.success("Modelo carregado!")
-    st.dataframe(df_modelo.head())
+# Nome final do arquivo
+out = "Planilha_Convertida.xlsx"
+df_final.to_excel(out, index=False)
 
+print("\n✔ Conversão concluída!")
+print("Baixando arquivo final...")
 
-# ==============================================================
-# PROCESSAMENTO
-# ==============================================================
-if st.button("🔄 Converter Planilha"):
-
-    if df_origem is None:
-        st.error("Envie primeiro o arquivo CSV!")
-    elif df_modelo is None:
-        st.error("Envie primeiro a Planilha Modelo!")
-    else:
-        st.info("Processando dados...")
-
-        # Copiar modelo e ajustar tamanho conforme CSV
-        df_final = df_modelo.copy()
-        df_final = df_final.iloc[:len(df_origem)].copy()
-
-        # ================================
-        # MAPEAMENTOS EXATOS DO SEU CÓDIGO
-        # ================================
-
-        # Datas
-        df_final["Data de Competência"] = df_origem["Data de Criação"]
-        df_final["Data de Vencimento"] = df_origem["Data de Criação"]
-        df_final["Data de Pagamento"] = df_origem["Data de Criação"]
-
-        # Descrição
-        df_final["Descrição"] = df_origem["Produto"]
-
-        # Valor
-        df_final["Valor"] = df_origem["Ganho Liquido"]
-
-        # Categoria fixa
-        df_final["Categoria"] = "11307 - Receita de Cursos"
-
-        # Resultado final
-        buffer = io.BytesIO()
-        df_final.to_excel(buffer, index=False)
-        buffer.seek(0)
-
-        st.success("✔ Conversão concluída!")
-
-        st.download_button(
-            label="📥 Baixar Planilha Convertida",
-            data=buffer,
-            file_name="Planilha_Convertida.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-
-        st.dataframe(df_final.head())
+files.download(out)
