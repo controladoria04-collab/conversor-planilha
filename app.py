@@ -66,7 +66,3 @@ if uploaded_csv:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-    </p>
-""", unsafe_allow_html=True)
-
-
