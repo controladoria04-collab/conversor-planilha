@@ -31,7 +31,8 @@ if uploaded_csv:
             df_origem = pd.read_csv(uploaded_csv, sep=";", encoding="latin1")
 
         # Ler modelo .xls
-        df_modelo = pd.read_excel(MODEL_FILE, engine="xlrd")
+        df_modelo = pd.read_excel(MODEL_FILE, engine="openpyxl")
+
 
         # Ajustar linhas
         df_final = df_modelo.iloc[:len(df_origem)].copy()
@@ -68,3 +69,4 @@ st.markdown("""
         “Entrega o teu caminho ao Senhor; confia nele, e o mais Ele fará.” — Salmo 37:5
     </p>
 """, unsafe_allow_html=True)
+
