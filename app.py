@@ -9,15 +9,15 @@ st.markdown("""
         Conversor de Planilha
     </h1>
     <p style='text-align: center; font-size:18px;'>
-        Envie o relatório do MyEduzz e receba a planilha formatada do Conta Azul.
+        Envie o relatório de vendas e receba a planilha formatada.
     </p>
 """, unsafe_allow_html=True)
 
 # --- Caixa de informação ---
-st.info("📤 Envie o relatório do MyEduzz para iniciar a conversão.")
+st.info("📤 Envie o relatório para iniciar a conversão.")
 
 # Upload do CSV
-uploaded_csv = st.file_uploader("Enviar relatório do MyEduzz", type=["csv"])
+uploaded_csv = st.file_uploader("Enviar relatório", type=["csv"])
 
 # Caminho do arquivo modelo (já existente no app)
 MODEL_FILE = "modelo.xlsx"  # Coloque o modelo no mesmo diretório do app
@@ -66,11 +66,7 @@ if uploaded_csv:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-# --- RODAPÉ COM O VERSÍCULO ---
-st.markdown("""
-    <br><br>
-    <p style='text-align: center; color: #666; font-size:14px;'>
-        “Entrega o teu caminho ao Senhor; confia nele, e o mais Ele fará.” — Salmo 37:5
     </p>
 """, unsafe_allow_html=True)
+
 
