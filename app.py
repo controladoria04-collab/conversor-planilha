@@ -3,6 +3,12 @@ import pandas as pd
 import io
 import os
 
+st.set_page_config(
+    page_title="Conversor Conta Azul",
+    page_icon="🔄",
+    layout="centered"
+)
+
 # --- Título estilizado ---
 st.markdown("""
     <h1 style='text-align: center; color: #4CAF50;'>
@@ -73,3 +79,4 @@ st.markdown("""
         “Entrega o teu caminho ao Senhor; confia nele, e o mais Ele fará.” — Salmo 37:5
     </p>
 """, unsafe_allow_html=True)
+
