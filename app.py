@@ -2,71 +2,91 @@ import streamlit as st
 import pandas as pd
 import io
 
-# --- Título estilizado ---
-st.markdown("""
-    <h1 style='text-align: center; color: #4CAF50;'>
-        Conversor de Planilha
-    </h1>
-    <p style='text-align: center; font-size:18px;'>
-        Envie o relatório do MyEduzz e receba a planilha formatada do Conta Azul.
-    </p>
-""", unsafe_allow_html=True)
+st.set_page_config(page_title="Conversor CSV → Modelo", layout="centered")
 
-# --- Caixa de informação ---
-st.info("📤 Envie o relatório do MyEduzz para iniciar a conversão.")
+st.title("Conversor CSV → Modelo | Automação 1.0")
+st.write("Envie o arquivo **CSV original** e a **Planilha Modelo (XLSX)** para gerar a planilha final convertida.")
 
-# Upload do CSV
-uploaded_csv = st.file_uploader("Enviar relatório do MyEduzz", type=["csv"])
 
-# Caminho do arquivo modelo
-MODEL_FILE = "modelo.xlsx"
+# ==============================================================
+# UPLOAD DO CSV ORIGINAL
+# ==============================================================
+st.subheader("1️⃣ Envie o arquivo CSV original")
+csv_file = st.file_uploader("Selecione o CSV", type=["csv"])
 
-if uploaded_csv:
-    with st.spinner("🔄 Convertendo arquivo, aguarde..."):
+df_origem = None
 
-        # Ler CSV
-        try:
-            df_origem = pd.read_csv(uploaded_csv, sep=";", encoding="utf-8")
-        except:
-            df_origem = pd.read_csv(uploaded_csv, sep=";", encoding="latin1")
+if csv_file:
+    # Tentativa de leitura em UTF-8 / Latin-1
+    try:
+        df_origem = pd.read_csv(csv_file, encoding="utf-8", sep=";")
+    except:
+        df_origem = pd.read_csv(csv_file, encoding="latin1", sep=";")
 
-        # Ler modelo .xls
-            df_modelo = pd.read_excel(MODEL_FILE, engine="openpyxl")
+    st.success("CSV carregado com sucesso!")
+    st.dataframe(df_origem.head())
 
-        # Ajustar linhas
-        df_final = df_modelo.iloc[:len(df_origem)].copy()
 
-        # --- Mapeamentos ---
+# ==============================================================
+# UPLOAD DA PLANILHA MODELO
+# ==============================================================
+st.subheader("2️⃣ Envie a Planilha Modelo (XLSX)")
+modelo_file = st.file_uploader("Selecione a planilha modelo", type=["xls", "xlsx"])
+
+df_modelo = None
+
+if modelo_file:
+    df_modelo = pd.read_excel(modelo_file)
+    st.success("Modelo carregado!")
+    st.dataframe(df_modelo.head())
+
+
+# ==============================================================
+# PROCESSAMENTO
+# ==============================================================
+if st.button("🔄 Converter Planilha"):
+
+    if df_origem is None:
+        st.error("Envie primeiro o arquivo CSV!")
+    elif df_modelo is None:
+        st.error("Envie primeiro a Planilha Modelo!")
+    else:
+        st.info("Processando dados...")
+
+        # Copiar modelo e ajustar tamanho conforme CSV
+        df_final = df_modelo.copy()
+        df_final = df_final.iloc[:len(df_origem)].copy()
+
+        # ================================
+        # MAPEAMENTOS EXATOS DO SEU CÓDIGO
+        # ================================
+
+        # Datas
         df_final["Data de Competência"] = df_origem["Data de Criação"]
         df_final["Data de Vencimento"] = df_origem["Data de Criação"]
         df_final["Data de Pagamento"] = df_origem["Data de Criação"]
+
+        # Descrição
         df_final["Descrição"] = df_origem["Produto"]
+
+        # Valor
         df_final["Valor"] = df_origem["Ganho Liquido"]
+
+        # Categoria fixa
         df_final["Categoria"] = "11307 - Receita de Cursos"
 
-        # Gerar XLSX em memória
-        output = io.BytesIO()
-        df_final.to_excel(output, index=False)
-        output.seek(0)
+        # Resultado final
+        buffer = io.BytesIO()
+        df_final.to_excel(buffer, index=False)
+        buffer.seek(0)
 
-    st.success("✅ Conversão concluída com sucesso!")
-    st.balloons()
+        st.success("✔ Conversão concluída!")
 
-    # Botão de download
-    st.download_button(
-        label="📥 Baixar Planilha Convertida",
-        data=output,
-        file_name="Planilha_Convertida.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+        st.download_button(
+            label="📥 Baixar Planilha Convertida",
+            data=buffer,
+            file_name="Planilha_Convertida.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
-
-# --- RODAPÉ COM O VERSÍCULO ---
-st.markdown("""
-    <br><br>
-    <p style='text-align: center; color: #666; font-size:14px;'>
-        “Entrega o teu caminho ao Senhor; confia nele, e o mais Ele fará.” — Salmo 37:5
-    </p>
-""", unsafe_allow_html=True)
-
-
+        st.dataframe(df_final.head())
