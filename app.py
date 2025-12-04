@@ -57,7 +57,6 @@ if uploaded_csv:
         output.seek(0)
 
     st.success("✅ Conversão concluída com sucesso!")
-    st.balloons()
 
     # Botão de download
     st.download_button(
@@ -74,3 +73,4 @@ st.markdown("""
         “Entrega o teu caminho ao Senhor; confia nele, e o mais Ele fará.” — Salmo 37:5
     </p>
 """, unsafe_allow_html=True)
+
