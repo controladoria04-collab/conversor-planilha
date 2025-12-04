@@ -19,7 +19,7 @@ st.info("📤 Envie o relatório do MyEduzz para iniciar a conversão.")
 uploaded_csv = st.file_uploader("Enviar relatório do MyEduzz", type=["csv"])
 
 # Caminho do arquivo modelo
-MODEL_FILE = "modelo.xls"
+MODEL_FILE = "modelo.xlsx"
 
 if uploaded_csv:
     with st.spinner("🔄 Convertendo arquivo, aguarde..."):
@@ -31,7 +31,7 @@ if uploaded_csv:
             df_origem = pd.read_csv(uploaded_csv, sep=";", encoding="latin1")
 
         # Ler modelo .xls
-         df_modelo = pd.read_excel(MODEL_FILE, engine="openpyxl")
+            df_modelo = pd.read_excel(MODEL_FILE, engine="openpyxl")
 
         # Ajustar linhas
         df_final = df_modelo.iloc[:len(df_origem)].copy()
@@ -68,4 +68,5 @@ st.markdown("""
         “Entrega o teu caminho ao Senhor; confia nele, e o mais Ele fará.” — Salmo 37:5
     </p>
 """, unsafe_allow_html=True)
+
 
