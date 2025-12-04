@@ -1,56 +1,70 @@
-# @title Conversor CSV -> Modelo | Automação 1.0
-
+import streamlit as st
 import pandas as pd
 import io
-from google.colab import files
 
-print(">>> UPLOAD 1: Envie o CSV com os dados ORIGINAIS <<<")
-uploaded_csv = files.upload()
-if not uploaded_csv:
-    raise ValueError("Nenhum arquivo CSV enviado.")
-csv_name = next(iter(uploaded_csv))
+# --- Título estilizado ---
+st.markdown("""
+    <h1 style='text-align: center; color: #4CAF50;'>
+        Conversor de Planilha
+    </h1>
+    <p style='text-align: center; font-size:18px;'>
+        Envie o relatório do MyEduzz e receba a planilha formatada do Conta Azul.
+    </p>
+""", unsafe_allow_html=True)
 
-# Tentativa de leitura do CSV
-try:
-    df_origem = pd.read_csv(io.BytesIO(uploaded_csv[csv_name]), encoding='utf-8', sep=';')
-except:
-    df_origem = pd.read_csv(io.BytesIO(uploaded_csv[csv_name]), encoding='latin1', sep=';')
+# --- Caixa de informação ---
+st.info("📤 Envie o relatório do MyEduzz para iniciar a conversão.")
 
-print("\n>>> UPLOAD 2: Envie a PLANILHA MODELO (XLSX) <<<")
-uploaded_model = files.upload()
-if not uploaded_model:
-    raise ValueError("Nenhuma planilha modelo enviada.")
-model_name = next(iter(uploaded_model))
+# Upload do CSV
+uploaded_csv = st.file_uploader("Enviar relatório do MyEduzz", type=["csv"])
 
-# Ler planilha modelo
-df_modelo = pd.read_excel(io.BytesIO(uploaded_model[model_name]))
+# Caminho do arquivo modelo
+MODEL_FILE = "modelo.xls"
 
-# Copiar e ajustar tamanho conforme o CSV
-df_final = df_modelo.copy()
-df_final = df_final.iloc[:len(df_origem)].copy()
+if uploaded_csv:
+    with st.spinner("🔄 Convertendo arquivo, aguarde..."):
 
-# Mapeamentos solicitados
-print("\nMapeando dados...")
+        # Ler CSV
+        try:
+            df_origem = pd.read_csv(uploaded_csv, sep=";", encoding="utf-8")
+        except:
+            df_origem = pd.read_csv(uploaded_csv, sep=";", encoding="latin1")
 
-# Datas — copiar Data de Criação para as 3 colunas
-df_final["Data de Competência"] = df_origem["Data de Criação"]
-df_final["Data de Vencimento"] = df_origem["Data de Criação"]
-df_final["Data de Pagamento"] = df_origem["Data de Criação"]
+        # Ler modelo .xls
+        df_modelo = pd.read_excel(MODEL_FILE, engine="xlrd")
 
-# Descrição ← Produto
-df_final["Descrição"] = df_origem["Produto"]
+        # Ajustar linhas
+        df_final = df_modelo.iloc[:len(df_origem)].copy()
 
-# Valor ← Ganho Liquido
-df_final["Valor"] = df_origem["Ganho Liquido"]
+        # --- Mapeamentos ---
+        df_final["Data de Competência"] = df_origem["Data de Criação"]
+        df_final["Data de Vencimento"] = df_origem["Data de Criação"]
+        df_final["Data de Pagamento"] = df_origem["Data de Criação"]
+        df_final["Descrição"] = df_origem["Produto"]
+        df_final["Valor"] = df_origem["Ganho Liquido"]
+        df_final["Categoria"] = "11307 - Receita de Cursos"
 
-# Categoria fixa
-df_final["Categoria"] = "11307 - Receita de Cursos"
+        # Gerar XLSX em memória
+        output = io.BytesIO()
+        df_final.to_excel(output, index=False)
+        output.seek(0)
 
-# Nome final do arquivo
-out = "Planilha_Convertida.xlsx"
-df_final.to_excel(out, index=False)
+    st.success("✅ Conversão concluída com sucesso!")
+    st.balloons()
 
-print("\n✔ Conversão concluída!")
-print("Baixando arquivo final...")
+    # Botão de download
+    st.download_button(
+        label="📥 Baixar Planilha Convertida",
+        data=output,
+        file_name="Planilha_Convertida.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
-files.download(out)
+
+# --- RODAPÉ COM O VERSÍCULO ---
+st.markdown("""
+    <br><br>
+    <p style='text-align: center; color: #666; font-size:14px;'>
+        “Entrega o teu caminho ao Senhor; confia nele, e o mais Ele fará.” — Salmo 37:5
+    </p>
+""", unsafe_allow_html=True)
