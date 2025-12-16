@@ -50,16 +50,31 @@ if uploaded_csv:
         df_final = df_modelo.iloc[:len(df_origem)].copy()
 
         # --- Mapeamentos ---
-        df_final["Data de Competência"] = df_origem["Data de Criação"]
-        df_final["Data de Vencimento"] = df_origem["Data de Criação"]
-        df_final["Data de Pagamento"] = df_origem["Data de Criação"]
+        # Converte "Data de Criação" para datetime e zera a hora (fica só a data)
+        data_criacao = pd.to_datetime(
+            df_origem["Data de Criação"],
+            dayfirst=True,
+            errors="coerce"
+        ).dt.normalize()  # remove a hora (00:00:00)
+
+        df_final["Data de Competência"] = data_criacao
+        df_final["Data de Vencimento"] = data_criacao
+        df_final["Data de Pagamento"] = data_criacao
+
         df_final["Descrição"] = df_origem["Produto"]
         df_final["Valor"] = df_origem["Ganho Liquido"]
         df_final["Categoria"] = "11307 - Receita de Cursos"
 
-        # Gerar XLSX em memória
+        # Gerar XLSX em memória (com formato dd/mm/aa)
         output = io.BytesIO()
-        df_final.to_excel(output, index=False)
+        with pd.ExcelWriter(
+            output,
+            engine="openpyxl",
+            date_format="DD/MM/YY",
+            datetime_format="DD/MM/YY"
+        ) as writer:
+            df_final.to_excel(writer, index=False)
+
         output.seek(0)
 
     st.success("✅ Conversão concluída com sucesso!")
@@ -79,4 +94,3 @@ st.markdown("""
         “Entrega o teu caminho ao Senhor; confia nele, e o mais Ele fará.” — Salmo 37:5
     </p>
 """, unsafe_allow_html=True)
-
