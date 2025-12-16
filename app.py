@@ -50,31 +50,24 @@ if uploaded_csv:
         df_final = df_modelo.iloc[:len(df_origem)].copy()
 
         # --- Mapeamentos ---
-        # Converte "Data de Criação" para datetime e zera a hora (fica só a data)
-        data_criacao = pd.to_datetime(
+        # Gera texto no formato dd/mm/aa (sem hora)
+        data_criacao_fmt = pd.to_datetime(
             df_origem["Data de Criação"],
             dayfirst=True,
             errors="coerce"
-        ).dt.normalize()  # remove a hora (00:00:00)
+        ).dt.strftime("%d/%m/%y")
 
-        df_final["Data de Competência"] = data_criacao
-        df_final["Data de Vencimento"] = data_criacao
-        df_final["Data de Pagamento"] = data_criacao
+        df_final["Data de Competência"] = data_criacao_fmt
+        df_final["Data de Vencimento"]  = data_criacao_fmt
+        df_final["Data de Pagamento"]   = data_criacao_fmt
 
         df_final["Descrição"] = df_origem["Produto"]
         df_final["Valor"] = df_origem["Ganho Liquido"]
         df_final["Categoria"] = "11307 - Receita de Cursos"
 
-        # Gerar XLSX em memória (com formato dd/mm/aa)
+        # Gerar XLSX em memória
         output = io.BytesIO()
-        with pd.ExcelWriter(
-            output,
-            engine="openpyxl",
-            date_format="DD/MM/YY",
-            datetime_format="DD/MM/YY"
-        ) as writer:
-            df_final.to_excel(writer, index=False)
-
+        df_final.to_excel(output, index=False)
         output.seek(0)
 
     st.success("✅ Conversão concluída com sucesso!")
