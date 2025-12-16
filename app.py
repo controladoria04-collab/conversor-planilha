@@ -95,3 +95,4 @@ st.markdown("""
         “Entrega o teu caminho ao Senhor; confia nele, e o mais Ele fará.” — Salmo 37:5
     </p>
 """, unsafe_allow_html=True)
+
